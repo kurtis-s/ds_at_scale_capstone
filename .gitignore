@@ -1,4 +1,5 @@
-data
+*.csv
+*.tsv
 domain_knowledge
 .Rproj.user
 .DS_store
