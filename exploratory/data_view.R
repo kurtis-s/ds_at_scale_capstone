@@ -7,6 +7,20 @@ library(ggplot2)
 
 DATA_BASE_PATH <- "data/transforms/"
 
+read_csv_dat <- function(filename) {
+    tbl_df(read.csv(file=paste(DATA_BASE_PATH, filename, sep=""), stringsAsFactors = FALSE))
+}
+
+file_names <- c("dat_311_transform.csv",
+               "dat_blight_transform.csv",
+               "dat_crime_transform.csv",
+               "dat_demolition_transform.csv")
+
+for(filename in filenames) {
+    dat_name <- gsub("_transform.csv", "", filename)
+    assign(dat_name, read_csv_dat(filename))
+}
+
 dat_311 <- tbl_df(read.csv(file=paste(DATA_BASE_PATH, "dat_311_transform.csv", sep=""), stringsAsFactors = FALSE))
 dat_blight <- tbl_df(read.csv(file=paste(DATA_BASE_PATH, "dat_blight_transform.csv", sep=""), stringsAsFactors = FALSE))
 dat_crime <- tbl_df(read.csv(file=paste(DATA_BASE_PATH, "dat_crime_transform.csv", sep=""), stringsAsFactors = FALSE))
