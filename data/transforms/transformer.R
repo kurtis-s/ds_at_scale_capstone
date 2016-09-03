@@ -32,12 +32,17 @@ split_lat_lon <- function(lat_lon_pairs) {
 }
 
 # Parcels data already has Latitude/Longitude, but one record is incorrectly entered
+dat_parcels$ID <- 1:nrow(dat_parcels)
 dat_parcels <- dat_parcels %>% rename(lat=Latitude, lon=Longitude)
 endsNAN <- function(charvec) endsWith(charvec, "NAN")
 # Discard the incorrect record
 dat_parcels <- dat_parcels[!endsNAN(dat_parcels$lat) & !endsNAN(dat_parcels$lon),]
 dat_parcels$lat <- as.numeric(dat_parcels$lat)
 dat_parcels$lon <- as.numeric(dat_parcels$lon)
+# Remove any records without an address
+dat_parcels <- dat_parcels %>% filter(PropAddr!="")
+# There are a few listed as no square feet/acres
+dat_parcels <- dat_parcels %>% filter(TotSqFt>0) %>% filter(TotAcres>0)
 
 # 311 already has lat/lng
 dat_311 <- dat_311 %>% rename(lon=lng)
