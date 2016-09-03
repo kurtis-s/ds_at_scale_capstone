@@ -7,21 +7,20 @@ library(rgdal)
 library(rgeos)
 library(ggplot2)
 
-
-
-
+dat_parcels_transform <- read.csv(paste(DATA_TRANSFORM_BASE_PATH, "dat_parcels_transform.csv", sep=""), stringsAsFactors = FALSE)
+read_transformed_dat(environment())
 
 detroit_zipcode_map <- readOGR(dsn="data/shapefiles/City of Detroit Zip Code Boundaries", layer="geo_export_811c61ad-91e0-45e5-8fee-48e8f79a05f1") %>%
     spTransform(CRS("+proj=longlat +datum=WGS84"))
 
 ## Just map the zip codes
-ggplot(data = detroit_zipcode_map, aes(x = long, y = lat, group=group)) + geom_path()
+zip_map <- ggplot(data = detroit_zipcode_map, aes(x = long, y = lat, group=group)) + geom_path()
+zip_map
 
-## Look at the 311 calls
-ggplot(data = detroit_zipcode_map, aes(x = long, y = lat, group = group)) +
-    geom_path() +
+scatter_records <- function(dset) {
+    zip_map +
     geom_point(
-        data = dat_311,
+        data = dset,
         aes(
             group = NULL,
             x = lon,
@@ -31,13 +30,11 @@ ggplot(data = detroit_zipcode_map, aes(x = long, y = lat, group = group)) +
         col = "blue",
         alpha = .1
     )
-for(dat_name in dat_names) {
-    lon <- get(dat_name)$lon
-    lat <- get(dat_name)$lat
-
-    wrong_lat <- (get(dat_name)$lat < 42.25 ) | (get(dat_name)$lat > 42.5)
-    wrong_lon <- (get(dat_name)$lon < -83.3 ) | (get(dat_name)$lon > -82.9)
-
-    print(dat_name)
-    print(sum(wrong_lat | wrong_lon))
 }
+
+# Get a quick idea of what the data looks like geographically
+scatter_records(dat_parcels_transform)
+scatter_records(dat_311_transform)
+scatter_records(dat_blight_transform)
+scatter_records(dat_crime_transform)
+scatter_records(dat_demolition_transform)

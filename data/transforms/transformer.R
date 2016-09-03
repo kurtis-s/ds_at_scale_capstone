@@ -1,18 +1,18 @@
 rm(list=ls())
 
+source("utilities.R")
+
 library(dplyr)
 library(rgdal)
 library(rgeos)
 library(ggplot2)
 
-
-dat_311 <- tbl_df(read.csv(file="data/detroit-311.csv", stringsAsFactors = FALSE))
-dat_blight <- tbl_df(read.csv(file="data/detroit-blight-violations.csv", stringsAsFactors = FALSE))
-dat_crime <- tbl_df(read.csv(file="data/detroit-crime.csv", stringsAsFactors = FALSE))
-dat_demolition <- tbl_df(read.csv(file="data/detroit-demolition-permits.tsv", sep="\t", stringsAsFactors = FALSE))
-
+BASE_OUT_PATH <- "data/transforms/"
+read_raw_dat(environment())
+dat_parcels <- read.csv("data/Parcel_Points_Ownership.csv", stringsAsFactors = FALSE)
 
 # Add lat/lon -------------------------------------------------------------
+
 split_lat_lon <- function(lat_lon_pairs) {
     #' Given a vector of pairs like "(42.36318237000006, -83.09167672099994)"
     #' split them up into two separate vectors of lattitude and longitude
@@ -30,6 +30,15 @@ split_lat_lon <- function(lat_lon_pairs) {
 
     return(list(lat=lat, lon=lon))
 }
+
+# Parcels data already has Latitude/Longitude, but one record is incorrectly entered
+dat_parcels <- dat_parcels %>% rename(lat=Latitude, lon=Longitude)
+endsNAN <- function(charvec) endsWith(charvec, "NAN")
+# Discard the incorrect record
+dat_parcels <- dat_parcels[!endsNAN(dat_parcels$lat) & !endsNAN(dat_parcels$lon),]
+dat_parcels$lat <- as.numeric(dat_parcels$lat)
+dat_parcels$lon <- as.numeric(dat_parcels$lon)
+
 # 311 already has lat/lng
 dat_311 <- dat_311 %>% rename(lon=lng)
 
@@ -41,6 +50,7 @@ dat_blight$lon <- blight_lat_lon$lon
 
 # Crime
 # Crime already has lat/lon
+dat_crime <- dat_crime %>% rename(lon=LON, lat=LAT)
 
 # Demolition
 demolition_lat_lon_pairs <- sapply(strsplit(dat_demolition$site_location, "\n"), function(address_triple) address_triple[3])
@@ -50,8 +60,36 @@ demolition_lat_lon <- split_lat_lon(demolition_lat_lon_pairs)
 dat_demolition$lat <- demolition_lat_lon$lat
 dat_demolition$lon <- demolition_lat_lon$lon
 
+# Remove any records where lat/lon is missing
+for(dat_name in dat_names()) {
+    lon <- get(dat_name)$lon
+    lat <- get(dat_name)$lat
+
+    missing_geo <- is.na(lon) | is.na(lat)
+
+    print(dat_name)
+    print(sum(missing_geo))
+
+    assign(dat_name, get(dat_name)[!missing_geo,])
+}
+
+# Some of the records have lat/lon pairs outside of Detroit.  Just discard them
+for(dat_name in dat_names()) {
+    lon <- get(dat_name)$lon
+    lat <- get(dat_name)$lat
+
+    wrong_lat <- (get(dat_name)$lat < 42.25 ) | (get(dat_name)$lat > 42.5)
+    wrong_lon <- (get(dat_name)$lon < -83.3 ) | (get(dat_name)$lon > -82.9)
+    incorrect_geo <- wrong_lat | wrong_lon
+
+    print(dat_name)
+    print(sum(wrong_lat | wrong_lon))
+
+    assign(dat_name, get(dat_name)[!incorrect_geo,])
+}
 
 # Write output ------------------------------------------------------------
+write.csv(dat_parcels, file=paste(BASE_OUT_PATH, "dat_parcels_transform.csv", sep=""))
 write.csv(dat_311, file=paste(BASE_OUT_PATH, "dat_311_transform.csv", sep=""))
 write.csv(dat_blight, file=paste(BASE_OUT_PATH, "dat_blight_transform.csv", sep=""))
 write.csv(dat_crime, file=paste(BASE_OUT_PATH, "dat_crime_transform.csv", sep=""))
