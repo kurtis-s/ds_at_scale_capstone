@@ -1,27 +1,15 @@
 rm(list=ls())
 
+source("utilities.R")
+
 library(dplyr)
 library(rgdal)
 library(rgeos)
 library(ggplot2)
 
-DATA_BASE_PATH <- "data/transforms/"
 
-file_names <- c("dat_311_transform.csv",
-               "dat_blight_transform.csv",
-               "dat_crime_transform.csv",
-               "dat_demolition_transform.csv")
 
-read_csv_dat <- function(filename) {
-    tbl_df(read.csv(file=paste(DATA_BASE_PATH, filename, sep=""), stringsAsFactors = FALSE))
-}
 
-dat_names <- vector()
-for(filename in filenames) {
-    dat_name <- gsub("_transform.csv", "", filename)
-    dat_names <- c(dat_names, dat_name)
-    assign(dat_name, read_csv_dat(filename))
-}
 
 detroit_zipcode_map <- readOGR(dsn="data/shapefiles/City of Detroit Zip Code Boundaries", layer="geo_export_811c61ad-91e0-45e5-8fee-48e8f79a05f1") %>%
     spTransform(CRS("+proj=longlat +datum=WGS84"))

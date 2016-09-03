@@ -5,7 +5,6 @@ library(rgdal)
 library(rgeos)
 library(ggplot2)
 
-BASE_OUT_PATH <- "data/transforms/"
 
 dat_311 <- tbl_df(read.csv(file="data/detroit-311.csv", stringsAsFactors = FALSE))
 dat_blight <- tbl_df(read.csv(file="data/detroit-blight-violations.csv", stringsAsFactors = FALSE))

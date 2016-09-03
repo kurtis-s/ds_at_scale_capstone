@@ -18,36 +18,28 @@ read_csv <- function(basepath, filename, sep=",") {
     tbl_df(read.csv(file=paste(basepath, filename, sep=""), sep = sep, stringsAsFactors = FALSE))
 }
 
-read_raw_dat <- function(envir) {
+read_dat <- function(envir, basepath, filenames, suffix="") {
     dframe_names <- dat_names()
-    for(i in 1:length(dframe_names)) {
-        filename <- RAW_CSV_NAMES[i]
-        print(filename)
-            if(".csv" %in% filename) {
-                assign(dframe_names[i], read_csv(DATA_BASE_PATH, filename), envir=envir)
-            }
-            else {
-                # For that one tab delimited file
-                assign(dframe_names[i], read_csv(DATA_BASE_PATH, filename, sep="\t"), envir=envir)
-            }
+    for (i in 1:length(dframe_names)) {
+        filename <- filenames[i]
+        if (endsWith(filename, "csv")) {
+            assign(paste(dframe_names[i], suffix, sep=""),
+                   read_csv(basepath, filename),
+                   envir = envir)
+        }
+        else {
+            # For that one tab delimited file
+            assign(paste(dframe_names[i], suffix, sep=""),
+                   read_csv(basepath, filename, sep = "\t"),
+                   envir = envir)
+        }
     }
+}
 
-    # ret <- sapply(RAW_CSV_NAMES, function(filename) {
-    #     if(".csv" %in% filename) {
-    #         read_csv(DATA_BASE_PATH, filename)
-    #     }
-    #     else {
-    #         # For that one tab delimited file
-    #         read_csv(DATA_BASE_PATH, filename, sep="\t")
-    #     }
-    # })
-    #
-    # if(!is.null(envir)) {
-    #     dframe_names <- dat_names()
-    #     for(i in 1:length(ret)) {
-    #         assign(ret[i], dframe_names[i], )
-    #     }
-    # }
-    #
-    # return(ret)
+read_raw_dat <- function(envir) {
+    read_dat(envir, DATA_BASE_PATH, RAW_CSV_NAMES)
+}
+
+read_transformed_dat <- function(envir) {
+    read_dat(envir, DATA_TRANSFORM_BASE_PATH, TRANSFORMED_CSV_NAMES, suffix="_transform")
 }
