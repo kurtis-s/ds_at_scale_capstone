@@ -3,11 +3,13 @@ DATA_TRANSFORM_BASE_PATH <- "data/transforms/"
 RAW_CSV_NAMES <- c("detroit-311.csv",
                 "detroit-blight-violations.csv",
                 "detroit-crime.csv",
-                "detroit-demolition-permits.tsv")
+                "detroit-demolition-permits.tsv",
+                "Parcel_Points_Ownership.csv")
 TRANSFORMED_CSV_NAMES <- c("dat_311_transform.csv",
                 "dat_blight_transform.csv",
                 "dat_crime_transform.csv",
-                "dat_demolition_transform.csv")
+                "dat_demolition_transform.csv",
+                "dat_parcels_transform.csv")
 
 dat_names <- function() {
     sapply(TRANSFORMED_CSV_NAMES, function(filename) gsub("_transform.csv", "", filename))

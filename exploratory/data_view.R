@@ -7,7 +7,7 @@ library(rgdal)
 library(rgeos)
 library(ggplot2)
 
-dat_parcels_transform <- read_csv(DATA_TRANSFORM_BASE_PATH, "dat_parcels_transform.csv")
+#dat_parcels_transform <- read_csv(DATA_TRANSFORM_BASE_PATH, "dat_parcels_transform.csv")
 read_transformed_dat(environment())
 
 detroit_zipcode_map <- readOGR(dsn="data/shapefiles/City of Detroit Zip Code Boundaries", layer="geo_export_811c61ad-91e0-45e5-8fee-48e8f79a05f1") %>%

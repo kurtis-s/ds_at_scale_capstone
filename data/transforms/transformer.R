@@ -9,7 +9,7 @@ library(ggplot2)
 
 BASE_OUT_PATH <- "data/transforms/"
 read_raw_dat(environment())
-dat_parcels <- read.csv("data/Parcel_Points_Ownership.csv", stringsAsFactors = FALSE)
+#dat_parcels <- read.csv("data/Parcel_Points_Ownership.csv", stringsAsFactors = FALSE)
 
 # Add lat/lon -------------------------------------------------------------
 
@@ -91,6 +91,20 @@ for(dat_name in dat_names()) {
     print(sum(wrong_lat | wrong_lon))
 
     assign(dat_name, get(dat_name)[!incorrect_geo,])
+}
+
+# Add fields for UTM coordinates
+for(dat_name in dat_names()) {
+    newframe <- get(dat_name)
+    xy <- newframe %>% select(lat, lon)
+    coordinates(xy) <- c("lon", "lat")
+    proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")
+
+    # Detroit is in UTM zone 17
+    res <- spTransform(xy, CRS("+proj=utm +zone=17 ellps=WGS84"))
+    newframe$x <- res@coords[,1]
+    newframe$y <- res@coords[,2]
+    assign(dat_name, newframe)
 }
 
 # Write output ------------------------------------------------------------
