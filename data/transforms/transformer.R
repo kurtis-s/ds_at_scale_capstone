@@ -7,7 +7,6 @@ library(rgdal)
 library(rgeos)
 library(ggplot2)
 
-BASE_OUT_PATH <- "data/transforms/"
 read_raw_dat(environment())
 #dat_parcels <- read.csv("data/Parcel_Points_Ownership.csv", stringsAsFactors = FALSE)
 
@@ -65,52 +64,19 @@ demolition_lat_lon <- split_lat_lon(demolition_lat_lon_pairs)
 dat_demolition$lat <- demolition_lat_lon$lat
 dat_demolition$lon <- demolition_lat_lon$lon
 
-# Remove any records where lat/lon is missing
-for(dat_name in dat_names()) {
-    lon <- get(dat_name)$lon
-    lat <- get(dat_name)$lat
+# Process lat/lon ---------------------------------------------------------
+dset_names <- dat_names()
+names(dset_names) <- dat_transform_names()
+datenv <- sapply(dset_names, function(name) get(name))
+source(paste(DATA_TRANSFORM_BASE_PATH, "process_latlon.R", sep=""))
 
-    missing_geo <- is.na(lon) | is.na(lat)
-
-    print(dat_name)
-    print(sum(missing_geo))
-
-    assign(dat_name, get(dat_name)[!missing_geo,])
-}
-
-# Some of the records have lat/lon pairs outside of Detroit.  Just discard them
-for(dat_name in dat_names()) {
-    lon <- get(dat_name)$lon
-    lat <- get(dat_name)$lat
-
-    wrong_lat <- (get(dat_name)$lat < 42.25 ) | (get(dat_name)$lat > 42.5)
-    wrong_lon <- (get(dat_name)$lon < -83.3 ) | (get(dat_name)$lon > -82.9)
-    incorrect_geo <- wrong_lat | wrong_lon
-
-    print(dat_name)
-    print(sum(wrong_lat | wrong_lon))
-
-    assign(dat_name, get(dat_name)[!incorrect_geo,])
-}
-
-# Add fields for UTM coordinates
-for(dat_name in dat_names()) {
-    newframe <- get(dat_name)
-    xy <- newframe %>% select(lat, lon)
-    coordinates(xy) <- c("lon", "lat")
-    proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")
-
-    # Detroit is in UTM zone 17
-    res <- spTransform(xy, CRS("+proj=utm +zone=17 ellps=WGS84"))
-    newframe$x <- res@coords[,1]
-    newframe$y <- res@coords[,2]
-    assign(dat_name, newframe)
-}
+# Assign buildings --------------------------------------------------------
+source(paste(DATA_TRANSFORM_BASE_PATH, "building_assignment.R", sep=""))
 
 # Write output ------------------------------------------------------------
-write.csv(dat_parcels, file=paste(BASE_OUT_PATH, "dat_parcels_transform.csv", sep=""))
-write.csv(dat_311, file=paste(BASE_OUT_PATH, "dat_311_transform.csv", sep=""))
-write.csv(dat_blight, file=paste(BASE_OUT_PATH, "dat_blight_transform.csv", sep=""))
-write.csv(dat_crime, file=paste(BASE_OUT_PATH, "dat_crime_transform.csv", sep=""))
-write.csv(dat_demolition, file=paste(BASE_OUT_PATH, "dat_demolition_transform.csv", sep=""))
-
+BASE_OUT_PATH <- "data/transforms/"
+for(i in 1:length(datenv)) {
+    dat_name <- dat_transform_names()[i]
+    out_filename <- TRANSFORMED_CSV_NAMES[i]
+    write_csv(datenv[[dat_name]], BASE_OUT_PATH, out_filename)
+}

@@ -15,8 +15,16 @@ dat_names <- function() {
     sapply(TRANSFORMED_CSV_NAMES, function(filename) gsub("_transform.csv", "", filename))
 }
 
+dat_transform_names <- function() {
+    sapply(TRANSFORMED_CSV_NAMES, function(filename) gsub(".csv", "", filename))
+}
+
 read_csv <- function(basepath, filename, sep=",") {
     tbl_df(read.csv(file=paste(basepath, filename, sep=""), sep = sep, stringsAsFactors = FALSE))
+}
+
+write_csv <- function(dat, basepath, filename) {
+    write.csv(dat, file=paste(basepath, filename, sep=""), row.names = FALSE)
 }
 
 read_dat <- function(envir, basepath, filenames, suffix="") {
