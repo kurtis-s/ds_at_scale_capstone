@@ -1,40 +1,26 @@
 rm(list=ls()[ls() != "datenv"])
 
+source("utilities.R")
+
 library(rgdal)
 
 parcel_size <- 50 # UTM is in meters, 25m ~ 80ft
 xgrid <- seq(310000, 344000, by=parcel_size)
 ygrid <- seq(4680000, 4708000, by=parcel_size)
 
-x_ids <- findInterval(dat$x, xgrid)
-y_ids <- findInterval(dat$y, ygrid)
+assign_build_id2 <- function(x, y) {
+    x_ids <- findInterval(x, xgrid)
+    y_ids <- findInterval(y, ygrid)
+    BuildID2 <- paste(x_ids, y_ids, sep="_")
 
-# lower_left_x <- xgrid[-length(xgrid)]
-# upper_right_x <- xgrid[-1]
-# lower_left_y <- ygrid[-length(ygrid)]
-# upper_right_y <- ygrid[-1]
-#
-# lower_pts <- expand.grid(lower_left_x, lower_left_y)
-# upper_pts <- expand.grid(upper_right_x, upper_right_y)
-#
-# building_dat <- data.frame(lower_pts, upper_pts)
-# colnames(building_dat) <- c("lower_left_x", "lower_left_y",
-#                             "upper_right_x", "upper_right_y")
-# building_dat$BuildID2 <- 1:nrow(building_dat)
+    return(BuildID2)
+}
 
+add_buildID2 <- function(dat) {
+    #' Add BuildID2 to a dataframe
+    BuildID2 <- assign_build_id2(dat$x, dat$y)
+    dat$BuildID2 <- BuildID2
 
-# assign_buildings <- function(x, y) {
-#     BuildID2 <- building_dat$BuildID2[(x > building_dat$lower_left_x) &
-#                                           (x < building_dat$upper_right_x) &
-#                                           (y > building_dat$lower_left_y) &
-#                                           (y < building_dat$upper_right_y)]
-#     return(BuildID2)
-# }
-#
-# assign_building_to_record <- function(record) {
-#     assign_buildings(record["x"], record["y"])
-# }
-#
-# test <- apply(dat, 1, assign_building_to_record)
-#
-# building_grid <- SpatialGridDataFrame()
+    return(dat)
+}
+datenv <- lapply(datenv, add_buildID2)

@@ -1,0 +1,10 @@
+Min x: 310661.9
+Max x: 343291.4
+Min y: 4680349
+Max y: 4707550
+
+Proposed limits:
+Min x: 310000
+Max x: 344000
+Min y: 4680000
+Max y: 4708000

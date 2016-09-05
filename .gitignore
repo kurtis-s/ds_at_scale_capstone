@@ -4,3 +4,4 @@ domain_knowledge
 .Rproj.user
 .DS_store
 *.Rproj
+.Rhistory

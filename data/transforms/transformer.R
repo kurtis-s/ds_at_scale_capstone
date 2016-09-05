@@ -73,6 +73,9 @@ source(paste(DATA_TRANSFORM_BASE_PATH, "process_latlon.R", sep=""))
 # Assign buildings --------------------------------------------------------
 source(paste(DATA_TRANSFORM_BASE_PATH, "building_assignment.R", sep=""))
 
+# Assign alternative building IDs based on a grid -------------------------
+source(paste(DATA_TRANSFORM_BASE_PATH, "building_assignment2.R", sep=""))
+
 # Write output ------------------------------------------------------------
 BASE_OUT_PATH <- "data/transforms/"
 for(i in 1:length(datenv)) {

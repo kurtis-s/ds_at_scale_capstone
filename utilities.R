@@ -1,3 +1,5 @@
+library(dplyr)
+
 DATA_BASE_PATH <- "data/"
 DATA_TRANSFORM_BASE_PATH <- "data/transforms/"
 RAW_CSV_NAMES <- c("detroit-311.csv",
