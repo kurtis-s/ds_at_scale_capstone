@@ -1,7 +1,16 @@
 rm(list=ls()[ls() != "datenv"])
 
+library(dplyr)
 library(caret)
+
+source("utilities.R")
+
 set.seed(38292989)
+
+if(!exists("datenv")) {
+    datenv <- new.env()
+    read_transformed_dat(datenv)
+}
 
 ## Get IDs of the blighted buildings
 blighted_buildings_filtered <- datenv$dat_demolition_transform %>%
