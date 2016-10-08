@@ -2,6 +2,7 @@ rm(list=ls()[ls() != "datenv"])
 
 library(dplyr)
 library(caret)
+library(kernlab)
 
 source("utilities.R")
 
@@ -18,7 +19,7 @@ blighted_buildings_filtered <- datenv$dat_demolition_transform %>%
 blighted_building_ids <- unique(blighted_buildings_filtered$BuildID)
 
 ## Create a dataframe of all the building IDs and whether they're blighted or not
-buildings <- datenv$dat_parcels_transform %>% select(BuildID)
+buildings <- datenv$dat_parcels_transform %>% select(BuildID, x, y)
 buildings$blighted <- buildings$BuildID %in% blighted_building_ids
 
 ## Sample an equal number of non-blighted buildings as blighted
@@ -52,6 +53,7 @@ train <- model_dset[train_idx,]
 test <- model_dset[-train_idx,]
 
 ctrl <- trainControl(method = "repeatedcv", number=5, savePredictions=TRUE)
+#mod_fit <- train(blighted ~ n_blight_violations + x + y,
 mod_fit <- train(blighted ~ n_blight_violations,
                  data=model_dset,
                  method="glm",
@@ -66,3 +68,12 @@ pred <- predict(mod_fit, newdata=full_dset)
 confusionMatrix(data=pred, full_dset$blighted)
 
 
+# GP ----------------------------------------------------------------------
+gp_mod_fit <- gausspr(blighted ~ n_blight_violations + x + y,
+                 data=model_dset)
+
+gp_pred <- predict(gp_mod_fit, newdata=model_dset)
+confusionMatrix(data=gp_pred, model_dset$blighted)
+
+gp_pred <- predict(gp_mod_fit, newdata=full_dset)
+confusionMatrix(data=gp_pred, full_dset$blighted)
