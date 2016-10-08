@@ -1,10 +1,12 @@
 rm(list=ls()[ls() != "datenv"])
 
-library(Boruta)
-library(dplyr)
+#library(Boruta)
+library(plyr)
+library(doMC)
 library(caret)
-library(kernlab)
+#library(kernlab)
 library(data.table)
+library(dplyr)
 
 source("utilities.R")
 
@@ -67,7 +69,7 @@ blighted_building_ids <- unique(blighted_buildings_filtered$BuildID)
 
 ## Mark buildings as blighted or not
 full_dset$blighted <- full_dset$BuildID %in% blighted_building_ids
-full_dset$blighted <- factor(full_dset$blighted)
+full_dset$blighted <- factor(as.numeric(full_dset$blighted), labels=c("blight_free", "blighted"))
 
 ## Replace all NAs with 0
 full_dset <- full_dset[-which(is.na(full_dset$BuildID)),]
@@ -78,10 +80,10 @@ names(full_dset) <- make.names(names(full_dset))
 
 ## Sample an equal number of non-blighted buildings as blighted
 nblighted <- length(blighted_building_ids)
-non_blighted_samp <- sample_n(full_dset %>% filter(blighted==FALSE), nblighted)
+non_blighted_samp <- sample_n(full_dset %>% filter(blighted=="blight_free"), nblighted)
 
 ## Make dset for the model
-blighted <- full_dset %>% filter(blighted==TRUE)
+blighted <- full_dset %>% filter(blighted=="blighted")
 model_dset <- rbind(blighted, non_blighted_samp)
 
 # Using only the sampled dataset ------------------------------------------
@@ -91,7 +93,8 @@ testdata <- model_dset[-train_idx,]
 
 # traindata <- traindata[sample(1:nrow(traindata), size=100),]
 
-ctrl <- trainControl(method = "repeatedcv", number=2, savePredictions=TRUE)
+registerDoMC(cores = 4)
+ctrl <- trainControl(method = "repeatedcv", number=5, repeats=5, savePredictions=TRUE, classProbs=TRUE)
 # mod_fit <- train(blighted ~ . - BuildID,
 #                  data=traindata,
 #                  method="glm",
@@ -99,13 +102,14 @@ ctrl <- trainControl(method = "repeatedcv", number=2, savePredictions=TRUE)
 #                  trControl=ctrl)
 mod_fit <- train(blighted ~ . - BuildID,
                  data=traindata,
-                 method="rf",
+                 method="gbm",
+                 metric="ROC",
                  trControl=ctrl)
 
 pred <- predict(mod_fit, newdata=testdata)
 confusionMatrix(data=pred, testdata$blighted)
 
-saveRDS(mod_fit, file="mod_fit2.rds")
+saveRDS(mod_fit, file="gbm_fit.rds")
 # boruta.train <- Boruta(blighted ~ . - BuildID, data = traindata, doTrace = 2)
 #
 #
