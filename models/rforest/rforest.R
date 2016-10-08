@@ -1,5 +1,6 @@
 rm(list=ls()[ls() != "datenv"])
 
+library(Boruta)
 library(dplyr)
 library(caret)
 library(kernlab)
@@ -16,7 +17,6 @@ if(!exists("datenv")) {
 
 parcels <- datenv$dat_parcels_transform %>%
     select(SalePrice,
-           PropZip,
            TaxStatus,
            TotSqFt,
            TotAcres,
@@ -28,6 +28,11 @@ parcels <- datenv$dat_parcels_transform %>%
            x,
            y,
            BuildID)
+parcels$TaxStatus <- factor(parcels$TaxStatus)
+parcels$IsImproved <- factor(parcels$IsImproved)
+parcels$SEV <- as.numeric(sub("\\$","", parcels$SEV))
+parcels$AV <- as.numeric(sub("\\$","", parcels$AV))
+parcels$TV <- as.numeric(sub("\\$","", parcels$TV))
 parcels$SalePrice <- as.numeric(sub("\\$","", parcels$SalePrice))
 
 datenv$dat_blight_transform$AgencyName <- factor(datenv$dat_blight_transform$AgencyName)
@@ -62,11 +67,52 @@ blighted_building_ids <- unique(blighted_buildings_filtered$BuildID)
 
 ## Mark buildings as blighted or not
 full_dset$blighted <- full_dset$BuildID %in% blighted_building_ids
+full_dset$blighted <- factor(full_dset$blighted)
+
+## Replace all NAs with 0
+full_dset <- full_dset[-which(is.na(full_dset$BuildID)),]
+full_dset[is.na(full_dset)] <- 0
+
+## Change varnames to make R happy
+names(full_dset) <- make.names(names(full_dset))
 
 ## Sample an equal number of non-blighted buildings as blighted
 nblighted <- length(blighted_building_ids)
 non_blighted_samp <- sample_n(full_dset %>% filter(blighted==FALSE), nblighted)
 
 ## Make dset for the model
-blighted <- buildings %>% filter(blighted==TRUE)
+blighted <- full_dset %>% filter(blighted==TRUE)
 model_dset <- rbind(blighted, non_blighted_samp)
+
+# Using only the sampled dataset ------------------------------------------
+train_idx <- createDataPartition(model_dset$blighted, p=.8, list=FALSE)
+traindata <- model_dset[train_idx,]
+testdata <- model_dset[-train_idx,]
+
+# traindata <- traindata[sample(1:nrow(traindata), size=100),]
+
+ctrl <- trainControl(method = "repeatedcv", number=2, savePredictions=TRUE)
+# mod_fit <- train(blighted ~ . - BuildID,
+#                  data=traindata,
+#                  method="glm",
+#                  family="binomial",
+#                  trControl=ctrl)
+mod_fit <- train(blighted ~ . - BuildID,
+                 data=traindata,
+                 method="rf",
+                 trControl=ctrl)
+
+pred <- predict(mod_fit, newdata=testdata)
+confusionMatrix(data=pred, testdata$blighted)
+
+saveRDS(mod_fit, file="mod_fit2.rds")
+# boruta.train <- Boruta(blighted ~ . - BuildID, data = traindata, doTrace = 2)
+#
+#
+# control <- trainControl(method="repeatedcv", number=1, repeats=0)
+# metric <- "Accuracy"
+# mtry <- sqrt(ncol(traindata))
+# tunegrid <- expand.grid(.mtry=mtry)
+# #rf_default <- train(blighted ~ . - BuildID, data=traindata, method="rf", metric=metric, tuneGrid=tunegrid, trControl=control)
+# rf_default <- randomForest(blighted ~ . - BuildID, data=traindata)
+# print(rf_default)
