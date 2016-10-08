@@ -1,4 +1,5 @@
 library(dplyr)
+library(data.table)
 
 DATA_BASE_PATH <- "data/"
 DATA_TRANSFORM_BASE_PATH <- "data/transforms/"
@@ -22,7 +23,8 @@ dat_transform_names <- function() {
 }
 
 read_csv <- function(basepath, filename, sep=",") {
-    tbl_df(read.csv(file=paste(basepath, filename, sep=""), sep = sep, stringsAsFactors = FALSE))
+     tbl_df(read.csv(file=paste(basepath, filename, sep=""), sep = sep, stringsAsFactors = FALSE))
+    #fread(paste(basepath, filename, sep=""))
 }
 
 write_csv <- function(dat, basepath, filename) {
