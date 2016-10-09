@@ -60,12 +60,13 @@ On the test set the model achieved accuracy of 0.78, sensitivity of 0.76, and sp
 Test data:
 \begin{table}[ht]
 \centering
-\begin{tabular}{rrr}
+\begin{tabular}{rrrr}
+ && \textbf{Reference} \\
   \hline
- & Blight free & Blighted \\ 
+ && Blight free & Blighted \\ 
   \hline
-Blight free & 667 & 168 \\ 
-  Blighted & 212 & 711 \\ 
+  \textbf{Predicted} & Blight free & 667 & 168 \\ 
+  & Blighted & 212 & 711 \\ 
    \hline
 \end{tabular}
 \end{table}
@@ -75,12 +76,13 @@ On the full data set the model achieved accuracy of 0.76 with a 95% confidence i
 Full dataset:
 \begin{table}[ht]
 \centering
-\begin{tabular}{rrr}
+\begin{tabular}{rrrr}
+ && \textbf{Reference} \\
   \hline
- & Blight free & Blighted \\ 
+ && Blight free & Blighted \\ 
   \hline
-Blight free & 287,146 & 721 \\ 
-  Blighted & 89,508 & 3,676 \\ 
+  \textbf{Predicted} & Blight free & 287,146 & 721 \\ 
+  & Blighted & 89,508 & 3,676 \\ 
    \hline
 \end{tabular}
 \end{table}
