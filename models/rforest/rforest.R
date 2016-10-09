@@ -116,4 +116,8 @@ print(confusionMatrix(data=pred_test, testdata$blighted))
 pred <- predict(mod_fit, newdata=full_dset)
 print(confusionMatrix(data=pred, full_dset$blighted))
 
-# boruta.train <- Boruta(blighted ~ . - BuildID, data = traindata, doTrace = 2)
+# ROC for the full dataset
+pred_full <- predict(mod_fit, newdata=full_dset, type="prob")
+roc_curve <- roc(response=full_dset$blighted, predictor=pred_full[,1])
+saveRDS(roc_curve, file="full_roc_curve.rds")
+plot(roc_curve)
