@@ -7,6 +7,7 @@ library(caret)
 #library(kernlab)
 library(data.table)
 library(dplyr)
+library(pROC)
 
 source("utilities.R")
 
@@ -93,30 +94,26 @@ testdata <- model_dset[-train_idx,]
 
 # traindata <- traindata[sample(1:nrow(traindata), size=100),]
 
-registerDoMC(cores = 4)
-ctrl <- trainControl(method = "repeatedcv", number=5, repeats=5, savePredictions=TRUE, classProbs=TRUE)
-# mod_fit <- train(blighted ~ . - BuildID,
-#                  data=traindata,
-#                  method="glm",
-#                  family="binomial",
-#                  trControl=ctrl)
+registerDoMC(cores = 2)
+gbmGrid <-  expand.grid(interaction.depth = c(1, 3, 5),
+                        n.trees = (1:15)*100,
+                        shrinkage = c(.05, .1, .2),
+                        n.minobsinnode = 10)
+ctrl <- trainControl(method = "repeatedcv", number=10, repeats=5,
+                     savePredictions=TRUE, classProbs=TRUE, summaryFunction=twoClassSummary)
 mod_fit <- train(blighted ~ . - BuildID,
                  data=traindata,
                  method="gbm",
                  metric="ROC",
-                 trControl=ctrl)
+                 trControl=ctrl,
+                 tuneGrid=gbmGrid)
+saveRDS(mod_fit, file="gbm_fit_auc_grid.rds")
 
-pred <- predict(mod_fit, newdata=testdata)
-confusionMatrix(data=pred, testdata$blighted)
+pred_test <- predict(mod_fit, newdata=testdata)
+print(confusionMatrix(data=pred_test, testdata$blighted))
 
-saveRDS(mod_fit, file="gbm_fit.rds")
+# Using the full dataset --------------------------------------------------
+pred <- predict(mod_fit, newdata=full_dset)
+print(confusionMatrix(data=pred, full_dset$blighted))
+
 # boruta.train <- Boruta(blighted ~ . - BuildID, data = traindata, doTrace = 2)
-#
-#
-# control <- trainControl(method="repeatedcv", number=1, repeats=0)
-# metric <- "Accuracy"
-# mtry <- sqrt(ncol(traindata))
-# tunegrid <- expand.grid(.mtry=mtry)
-# #rf_default <- train(blighted ~ . - BuildID, data=traindata, method="rf", metric=metric, tuneGrid=tunegrid, trControl=control)
-# rf_default <- randomForest(blighted ~ . - BuildID, data=traindata)
-# print(rf_default)
